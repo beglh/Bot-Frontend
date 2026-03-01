@@ -487,31 +487,33 @@
   font-family: Consolas, monospace;
 }
 
-/* ALERT: no strip; seamless loop (no delay between end and start); start at glass */
+/* ALERT: each message runs independently from right edge of alert-zone to left */
 .alert-zone {
   position: fixed;
   top: 20px;
   left: 0;
-  width: calc(100vw + 400px);
+  width: calc(100vw - 600px); /* stops exactly at the left edge of the 600px glass panel */
   height: 40px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
   overflow: hidden;
-  padding: 0 16px;
   z-index: 9;
-  font-size: 0.9rem;
   pointer-events: none;
-  clip-path: inset(0 1000px 0 0);
+  display: flex;
+  align-items: center;
 }
 
-.alert-track {
+.alert-item {
+  position: absolute;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   white-space: nowrap;
-  flex-shrink: 0;
-  animation: alert-marquee 22s linear 0s infinite;
+  animation: alert-slide 16s linear forwards;
+}
+
+/* Starts at the right edge of the alert-zone (= left edge of glass), exits fully left */
+@keyframes alert-slide {
+  from { transform: translateX(calc(100vw - 600px)); }
+  to   { transform: translateX(-100%); }
 }
 
 .alert-dot {
@@ -524,17 +526,54 @@
 }
 
 .alert-text {
+  font-size: 0.9rem;
   font-weight: 500;
   color: #ffffff;
   text-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
-/* Seamless: move by one copy width so next copy is at glass when one exits (no gap) */
-@keyframes alert-marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+/* Icon: emoji alternative to the dot */
+.alert-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(255,255,255,0.4));
+}
+
+/* HIGHLIGHT only — colored background pill, no animation */
+.alert-highlight {
+  color: #ffe066;
+  font-weight: 700;
+  background: rgba(255, 224, 102, 0.15);
+  border-radius: 4px;
+  padding: 0 4px;
+  text-shadow: none;
+}
+
+/* PULSE only — glowing orange, animates opacity/glow, no background */
+.alert-pulse {
+  color: #ff9800;
+  font-weight: 700;
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* BOTH highlight + pulse — yellow pill that also pulses */
+.alert-highlight.alert-pulse {
+  color: #ffe066;
+  background: rgba(255, 224, 102, 0.15);
+  border-radius: 4px;
+  padding: 0 4px;
+  text-shadow: none;
+  animation: pulse-glow-yellow 1s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%   { opacity: 1;    text-shadow: 0 0 6px rgba(255, 152, 0, 0.8); }
+  50%  { opacity: 0.5;  text-shadow: 0 0 22px rgba(255, 152, 0, 1), 0 0 40px rgba(255, 152, 0, 0.5); }
+  100% { opacity: 1;    text-shadow: 0 0 6px rgba(255, 152, 0, 0.8); }
+}
+
+@keyframes pulse-glow-yellow {
+  0%   { opacity: 1;   box-shadow: 0 0 0px rgba(255, 224, 102, 0); }
+  50%  { opacity: 0.6; box-shadow: 0 0 12px rgba(255, 224, 102, 0.7); }
+  100% { opacity: 1;   box-shadow: 0 0 0px rgba(255, 224, 102, 0); }
 }

@@ -4,6 +4,39 @@ import { API_BASE } from "../api/config";
 import "../styles/bot.css";
 
 const BG_IMAGES = ["bg1.jpg", "bg2.jpg", "bg3.jpg", "bg4.jpg"];
+// Icon options: "dot" (default orange dot) | "bot" (🤖) | "shield" (🛡️) | "warning" (⚠️) | "info" (ℹ️) | any emoji string
+const ALERTS = [
+  {
+    icon: "dot",                           // default orange dot
+    parts: [
+      { text: "SECURITY REMINDER: ", highlight: true },           // highlight only (yellow bg, no pulse)
+      { text: "Never share your temporary password with anyone." },
+    ],
+  },
+  {
+    icon: "⚠️",                            // warning emoji icon
+    parts: [
+      { text: "Do NOT disclose your " },
+      { text: "Pak No or CNIC", pulse: true },                    // pulse only (glowing, no highlight)
+      { text: " to anyone over the phone or email." },
+    ],
+  },
+  {
+    icon: "🤖",                            // bot icon
+    parts: [
+      { text: "Suspected unauthorized access? Contact " },
+      { text: "IT Helpdesk", highlight: true, pulse: true },      // BOTH highlight + pulse
+      { text: " immediately." },
+    ],
+  },
+  {
+    icon: "🛡️",                            // shield icon
+    parts: [
+      { text: "Always log out after your session ends." },         // plain text, no effect
+    ],
+  },
+];
+
 const CATEGORIES = [
   { value: "Officer", label: "Officer" },
   { value: "Airmen", label: "Airmen" },
@@ -33,6 +66,7 @@ export default function BotPage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
   const [bgActive, setBgActive] = useState(0);
+  const [alertTick, setAlertTick] = useState({ index: 0, tick: 0 });
 
   const scrollChatToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -219,16 +253,39 @@ export default function BotPage() {
       </div>
 
       <div className="alert-zone">
-        <div className="alert-track">
-          <span className="alert-dot" aria-hidden="true" />
-          <span className="alert-text" aria-hidden="true">
-            For your security, never share your temporary password or personal details with anyone.
-          </span>
-          <span className="alert-dot" />
+        <span
+          key={alertTick.tick}
+          className="alert-item"
+          onAnimationEnd={() =>
+            setAlertTick((prev) => ({
+              index: (prev.index + 1) % ALERTS.length,
+              tick: prev.tick + 1,
+            }))
+          }
+        >
+          {/* Icon: "dot" renders the CSS dot, anything else renders as emoji/text */}
+          {(() => {
+            const alert = ALERTS[alertTick.index];
+            const icon = typeof alert === "string" ? "dot" : (alert.icon ?? "dot");
+            return icon === "dot"
+              ? <span className="alert-dot" aria-hidden="true" />
+              : <span className="alert-icon" aria-hidden="true">{icon}</span>;
+          })()}
           <span className="alert-text">
-            For your security, never share your temporary password or personal details with anyone.
+            {typeof ALERTS[alertTick.index] === "string"
+              ? ALERTS[alertTick.index]
+              : ALERTS[alertTick.index].parts.map((part, i) => {
+                  const cls = [
+                    part.highlight ? "alert-highlight" : "",
+                    part.pulse     ? "alert-pulse"     : "",
+                  ].filter(Boolean).join(" ");
+                  return cls
+                    ? <span key={i} className={cls}>{part.text}</span>
+                    : <span key={i}>{part.text}</span>;
+                })
+            }
           </span>
-        </div>
+        </span>
       </div>
 
       <div className="bot-wrapper">
