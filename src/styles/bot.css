@@ -15,19 +15,196 @@
 .bg-layer {
   position: absolute;
   inset: 0;
-  background-size: cover;
-  background-position: center;
   transition: opacity 3s ease-in-out;
   opacity: 0;
   z-index: 0;
+  overflow: hidden;
 }
 
 .bg-layer.active {
   opacity: 1;
 }
 
-.bg-layer:first-child {
-  opacity: 1;
+/* Animated grid */
+.bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-drift 20s linear infinite;
+}
+
+@keyframes grid-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(60px, 60px); }
+}
+
+/* Floating particles */
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bg-particle {
+  position: absolute;
+  bottom: -10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: particle-rise linear infinite;
+}
+
+@keyframes particle-rise {
+  0%   { transform: translateY(0) scale(1);   opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.3; }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+
+/* Glowing orbs */
+.bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  animation: orb-float 8s ease-in-out infinite alternate;
+}
+
+.bg-orb-1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+}
+
+.bg-orb-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -80px;
+  left: 20%;
+  animation-delay: -4s;
+  opacity: 0.1;
+}
+
+@keyframes orb-float {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, 30px) scale(1.1); }
+}
+
+/* Slide content container */
+.bg-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8%;
+  padding-right: calc(600px + 5%);
+}
+
+/* Welcome slide */
+.bg-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bg-welcome-icon {
+  font-size: 4rem;
+  margin-bottom: 10px;
+  animation: icon-bob 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.3));
+}
+
+@keyframes icon-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.bg-welcome-line1 {
+  font-size: 1.1rem;
+  font-weight: 300;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+
+.bg-welcome-line2 {
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  text-shadow: 0 0 40px rgba(255,255,255,0.2);
+}
+
+.bg-welcome-line3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  animation: shimmer-text 3s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer-text {
+  from { filter: brightness(1)   drop-shadow(0 0 8px currentColor); }
+  to   { filter: brightness(1.4) drop-shadow(0 0 24px currentColor); }
+}
+
+.bg-welcome-bar {
+  margin-top: 16px;
+  height: 3px;
+  width: 0;
+  border-radius: 2px;
+  animation: bar-grow 1.5s ease-out 0.5s forwards;
+  box-shadow: 0 0 12px currentColor;
+}
+
+@keyframes bar-grow {
+  from { width: 0; }
+  to   { width: 220px; }
+}
+
+/* Quote slides */
+.bg-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.bg-quote-icon {
+  font-size: 3.5rem;
+  animation: icon-bob 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 16px rgba(255,255,255,0.3));
+}
+
+.bg-quote-text {
+  font-size: 1.65rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+}
+
+.bg-quote-sub {
+  font-size: 1rem;
+  font-weight: 300;
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.5px;
+}
+
+.bg-quote-line {
+  height: 2px;
+  width: 0;
+  border-radius: 2px;
+  animation: bar-grow 1.5s ease-out 0.5s forwards;
+  opacity: 0.8;
 }
 
 .bot-wrapper {

@@ -3,7 +3,45 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../api/config";
 import "../styles/bot.css";
 
-const BG_IMAGES = ["bg1.jpg", "bg2.jpg", "bg3.jpg", "bg4.jpg"];
+const BG_SLIDES = [
+  {
+    gradient: "linear-gradient(135deg, #0a0e27 0%, #0d1b4b 40%, #0a2a5e 70%, #0d1b4b 100%)",
+    accent: "#4facfe",
+    type: "welcome",
+    line1: "Welcome to",
+    line2: "Personal Portal",
+    line3: "Password Reset Bot",
+    icon: "🤖",
+    particles: true,
+  },
+  {
+    gradient: "linear-gradient(135deg, #001a2e 0%, #002d4a 40%, #003d5e 70%, #002d4a 100%)",
+    accent: "#00c8ff",
+    type: "quote",
+    icon: "🛡️",
+    quote: "A strong password is your first line of defence.",
+    sub: "Use unique passwords for every system you access.",
+    particles: true,
+  },
+  {
+    gradient: "linear-gradient(135deg, #001a1a 0%, #002d2d 40%, #003d3d 70%, #002d2d 100%)",
+    accent: "#00e5cc",
+    type: "quote",
+    icon: "🔐",
+    quote: "Never share your credentials — not even with IT staff.",
+    sub: "Legitimate support will never ask for your password.",
+    particles: true,
+  },
+  {
+    gradient: "linear-gradient(135deg, #1a001a 0%, #2d0030 40%, #3d0040 70%, #2d0030 100%)",
+    accent: "#e040fb",
+    type: "quote",
+    icon: "⚠️",
+    quote: "Phishing attacks start with a single click.",
+    sub: "Always verify the sender before acting on any email.",
+    particles: true,
+  },
+];
 // Icon options: "dot" (default orange dot) | "bot" (🤖) | "shield" (🛡️) | "warning" (⚠️) | "info" (ℹ️) | any emoji string
 const ALERTS = [
   {
@@ -65,7 +103,6 @@ export default function BotPage() {
   const [backendStatus, setBackendStatus] = useState("checking");
   const [helpOpen, setHelpOpen] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
-  const [bgActive, setBgActive] = useState(0);
   const [alertTick, setAlertTick] = useState({ index: 0, tick: 0 });
 
   const scrollChatToBottom = useCallback(() => {
@@ -75,9 +112,8 @@ export default function BotPage() {
   useEffect(() => {
     if (sessionActive) return;
     const interval = setInterval(() => {
-      setBgIndex((i) => (i + 1) % BG_IMAGES.length);
-      setBgActive((a) => (a === 0 ? 1 : 0));
-    }, 7000);
+      setBgIndex((i) => (i + 1) % BG_SLIDES.length); // strict sequential 0→1→2→3→0
+    }, 8000); // 5s reading + 3s CSS crossfade
     bgIntervalRef.current = interval;
     return () => {
       clearInterval(interval);
@@ -238,18 +274,58 @@ export default function BotPage() {
   return (
     <>
       <div className="main-page">
-        <div
-          className={`bg-layer ${bgActive === 0 ? "active" : ""}`}
-          style={{
-            backgroundImage: `url(/${BG_IMAGES[bgIndex % BG_IMAGES.length]})`,
-          }}
-        />
-        <div
-          className={`bg-layer ${bgActive === 1 ? "active" : ""}`}
-          style={{
-            backgroundImage: `url(/${BG_IMAGES[(bgIndex + 1) % BG_IMAGES.length]})`,
-          }}
-        />
+        {BG_SLIDES.map((slide, slideIndex) => (
+          <div
+            key={slideIndex}
+            className={`bg-layer ${bgIndex === slideIndex ? "active" : ""}`}
+            style={{ background: slide.gradient }}
+          >
+            {/* Animated grid lines */}
+            <div className="bg-grid" style={{ "--accent": slide.accent }} />
+
+            {/* Floating particles */}
+            {slide.particles && (
+              <div className="bg-particles">
+                {Array.from({ length: 18 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="bg-particle"
+                    style={{
+                      left: `${(i * 37 + 11) % 100}%`,
+                      animationDelay: `${(i * 0.7) % 6}s`,
+                      animationDuration: `${6 + (i % 5)}s`,
+                      background: slide.accent,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Glowing orbs */}
+            <div className="bg-orb bg-orb-1" style={{ background: slide.accent }} />
+            <div className="bg-orb bg-orb-2" style={{ background: slide.accent }} />
+
+            {/* Slide content */}
+            <div className="bg-content">
+              {slide.type === "welcome" ? (
+                <div className="bg-welcome">
+                  <span className="bg-welcome-icon">{slide.icon}</span>
+                  <p className="bg-welcome-line1">{slide.line1}</p>
+                  <p className="bg-welcome-line2">{slide.line2}</p>
+                  <p className="bg-welcome-line3" style={{ color: slide.accent }}>{slide.line3}</p>
+                  <div className="bg-welcome-bar" style={{ background: slide.accent }} />
+                </div>
+              ) : (
+                <div className="bg-quote">
+                  <span className="bg-quote-icon">{slide.icon}</span>
+                  <p className="bg-quote-text">"{slide.quote}"</p>
+                  <p className="bg-quote-sub">{slide.sub}</p>
+                  <div className="bg-quote-line" style={{ background: slide.accent }} />
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="alert-zone">
