@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../api/config";
 import "../styles/bot.css";
 
+// ─── Slide timing ──────────────────────────────────────────────────────────
+const SLIDE_FADE_MS     = 5000;  // very slow crossfade — barely noticeable while typing
+const SLIDE_READ_MS     = 7000;  // reading time per slide
+const SLIDE_INTERVAL_MS = SLIDE_FADE_MS + SLIDE_READ_MS; // 12000ms total
+// ───────────────────────────────────────────────────────────────────────────
+
 const BG_SLIDES = [
   {
     gradient: "linear-gradient(135deg, #0a0e27 0%, #0d1b4b 40%, #0a2a5e 70%, #0d1b4b 100%)",
@@ -11,14 +17,14 @@ const BG_SLIDES = [
     line1: "Welcome to",
     line2: "Personal Portal",
     line3: "Password Reset Bot",
-    icon: "🤖",
+    icon: "smart_toy",         // Material Icon: robot/bot
     particles: true,
   },
   {
     gradient: "linear-gradient(135deg, #001a2e 0%, #002d4a 40%, #003d5e 70%, #002d4a 100%)",
     accent: "#00c8ff",
     type: "quote",
-    icon: "🛡️",
+    icon: "shield",            // Material Icon: shield
     quote: "A strong password is your first line of defence.",
     sub: "Use unique passwords for every system you access.",
     particles: true,
@@ -27,7 +33,7 @@ const BG_SLIDES = [
     gradient: "linear-gradient(135deg, #001a1a 0%, #002d2d 40%, #003d3d 70%, #002d2d 100%)",
     accent: "#00e5cc",
     type: "quote",
-    icon: "🔐",
+    icon: "lock",              // Material Icon: lock
     quote: "Never share your credentials — not even with IT staff.",
     sub: "Legitimate support will never ask for your password.",
     particles: true,
@@ -36,7 +42,7 @@ const BG_SLIDES = [
     gradient: "linear-gradient(135deg, #1a001a 0%, #2d0030 40%, #3d0040 70%, #2d0030 100%)",
     accent: "#e040fb",
     type: "quote",
-    icon: "⚠️",
+    icon: "gpp_bad",           // Material Icon: security warning
     quote: "Phishing attacks start with a single click.",
     sub: "Always verify the sender before acting on any email.",
     particles: true,
@@ -84,6 +90,7 @@ const CATEGORIES = [
 export default function BotPage() {
   const navigate = useNavigate();
   const chatEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const timerRef = useRef(null);
   const bgIntervalRef = useRef(null);
 
@@ -103,17 +110,23 @@ export default function BotPage() {
   const [backendStatus, setBackendStatus] = useState("checking");
   const [helpOpen, setHelpOpen] = useState(false);
   const [bgIndex, setBgIndex] = useState(0);
+  const [prevBgIndex, setPrevBgIndex] = useState(null);
   const [alertTick, setAlertTick] = useState({ index: 0, tick: 0 });
 
   const scrollChatToBottom = useCallback(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, []);
 
   useEffect(() => {
     if (sessionActive) return;
     const interval = setInterval(() => {
-      setBgIndex((i) => (i + 1) % BG_SLIDES.length); // strict sequential 0→1→2→3→0
-    }, 8000); // 5s reading + 3s CSS crossfade
+      setBgIndex((i) => {
+        setPrevBgIndex(i);
+        return (i + 1) % BG_SLIDES.length;
+      });
+    }, SLIDE_INTERVAL_MS);
     bgIntervalRef.current = interval;
     return () => {
       clearInterval(interval);
@@ -149,6 +162,11 @@ export default function BotPage() {
     const id = setInterval(check, 30000);
     return () => clearInterval(id);
   }, []);
+
+  // Auto-scroll chat to bottom whenever messages change
+  useEffect(() => {
+    scrollChatToBottom();
+  }, [messages, scrollChatToBottom]);
 
   const startSession = async () => {
     if (!category || !pakNo.trim()) {
@@ -274,11 +292,25 @@ export default function BotPage() {
   return (
     <>
       <div className="main-page">
-        {BG_SLIDES.map((slide, slideIndex) => (
+        {BG_SLIDES.map((slide, slideIndex) => {
+          const isActive = bgIndex === slideIndex;
+          const isPrev   = prevBgIndex === slideIndex;
+          return (
           <div
             key={slideIndex}
-            className={`bg-layer ${bgIndex === slideIndex ? "active" : ""}`}
-            style={{ background: slide.gradient }}
+            className="bg-layer"
+            style={{
+              background: slide.gradient,
+              // Outgoing slide: stays fully opaque underneath (z-index 0)
+              // Incoming slide: fades in on top (z-index 1)
+              // All others: hidden behind (z-index 0, opacity 0)
+              zIndex:   isActive ? 1 : 0,
+              opacity:  isActive || isPrev ? 1 : 0,
+              // Only the incoming slide transitions opacity; outgoing stays solid
+              transition: isActive
+                ? `opacity ${SLIDE_FADE_MS / 1000}s cubic-bezier(0.25, 0, 0, 1)`
+                : "none",
+            }}
           >
             {/* Animated grid lines */}
             <div className="bg-grid" style={{ "--accent": slide.accent }} />
@@ -305,27 +337,40 @@ export default function BotPage() {
             <div className="bg-orb bg-orb-1" style={{ background: slide.accent }} />
             <div className="bg-orb bg-orb-2" style={{ background: slide.accent }} />
 
-            {/* Slide content */}
-            <div className="bg-content">
+            {/* Slide content — keyed so bar animation restarts on each slide activation */}
+            <div className="bg-content" key={bgIndex === slideIndex ? `active-${slideIndex}` : `idle-${slideIndex}`}>
               {slide.type === "welcome" ? (
                 <div className="bg-welcome">
-                  <span className="bg-welcome-icon">{slide.icon}</span>
+                  <span className="bg-welcome-icon material-icons-round" style={{ color: slide.accent }}>{slide.icon}</span>
                   <p className="bg-welcome-line1">{slide.line1}</p>
                   <p className="bg-welcome-line2">{slide.line2}</p>
                   <p className="bg-welcome-line3" style={{ color: slide.accent }}>{slide.line3}</p>
-                  <div className="bg-welcome-bar" style={{ background: slide.accent }} />
+                  <div
+                    className="bg-welcome-bar"
+                    style={{
+                      background: slide.accent,
+                      animationDuration: `${SLIDE_INTERVAL_MS / 1000}s`,
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="bg-quote">
-                  <span className="bg-quote-icon">{slide.icon}</span>
+                  <span className="bg-quote-icon material-icons-round" style={{ color: slide.accent }}>{slide.icon}</span>
                   <p className="bg-quote-text">"{slide.quote}"</p>
                   <p className="bg-quote-sub">{slide.sub}</p>
-                  <div className="bg-quote-line" style={{ background: slide.accent }} />
+                  <div
+                    className="bg-quote-line"
+                    style={{
+                      background: slide.accent,
+                      animationDuration: `${SLIDE_INTERVAL_MS / 1000}s`,
+                    }}
+                  />
                 </div>
               )}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="alert-zone">
@@ -454,7 +499,7 @@ export default function BotPage() {
           </div>
 
           {chatVisible && (
-            <div className="chat-content" ref={chatEndRef}>
+            <div className="chat-content" ref={chatContainerRef}>
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -495,11 +540,9 @@ export default function BotPage() {
                 onChange={(e) => setAnswerInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submitAnswer()}
               />
-              <div className="btn-container">
-                <button type="button" className="start-btn" onClick={submitAnswer}>
-                  Send
-                </button>
-              </div>
+              <button type="button" className="start-btn send-btn" onClick={submitAnswer}>
+                Send
+              </button>
             </div>
           )}
         </div>
@@ -512,34 +555,78 @@ export default function BotPage() {
             onClick={() => setHelpOpen(false)}
             role="presentation"
           />
-          <div id="help-window" className="glass-window help-window active">
-            <div className="header">
-              <span className="title">Input Formats Guide</span>
+          <div className="help-window active">
+
+            {/* Header */}
+            <div className="help-header">
+              <div className="help-header-icon">📋</div>
+              <div>
+                <div className="help-title">Input Formats Guide</div>
+                <div className="help-subtitle">Accepted formats for each field</div>
+              </div>
               <span
-                className="close-btn"
+                className="help-close"
                 role="button"
                 tabIndex={0}
                 onClick={() => setHelpOpen(false)}
+                onKeyDown={(e) => e.key === "Enter" && setHelpOpen(false)}
               >
-                ×
+                <span className="material-icons-round">close</span>
               </span>
             </div>
+
+            {/* Divider */}
+            <div className="help-divider" />
+
+            {/* Items */}
             <div className="help-content">
-              <ul>
-                <li>
-                  Date: <code>ddmmyy</code> (e.g., <code>310186</code>)
-                </li>
-                <li>
-                  CNIC: <code>1234567890123</code> (no dashes)
-                </li>
-                <li>
-                  PSID Card: <code>A-1234567</code>
-                </li>
-                <li>
-                  Civilian: <code>M-12345, ZB-12345</code>
-                </li>
-              </ul>
+              <div className="help-item">
+                <div className="help-item-icon">📅</div>
+                <div className="help-item-body">
+                  <div className="help-item-label">Date of Birth</div>
+                  <div className="help-item-format">
+                    Format: <code>ddmmyy</code> &nbsp;·&nbsp; e.g. <code>310186</code>
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-item">
+                <div className="help-item-icon">🪪</div>
+                <div className="help-item-body">
+                  <div className="help-item-label">CNIC</div>
+                  <div className="help-item-format">
+                    Format: <code>1234567890123</code> &nbsp;·&nbsp; no dashes
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-item">
+                <div className="help-item-icon">🎖️</div>
+                <div className="help-item-body">
+                  <div className="help-item-label">PSID Card</div>
+                  <div className="help-item-format">
+                    Format: <code>A-1234567</code>
+                  </div>
+                </div>
+              </div>
+
+              <div className="help-item">
+                <div className="help-item-icon">🏢</div>
+                <div className="help-item-body">
+                  <div className="help-item-label">Civilian ID</div>
+                  <div className="help-item-format">
+                    Format: <code>M-12345</code> &nbsp;or&nbsp; <code>ZB-12345</code>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Footer note */}
+            <div className="help-footer">
+              <span className="material-icons-round" style={{ fontSize: "14px", opacity: 0.5 }}>info</span>
+              &nbsp;Answers are case-insensitive. Do not include spaces.
+            </div>
+
           </div>
         </>
       )}

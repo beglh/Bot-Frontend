@@ -1,0 +1,91 @@
+/* ─── Shared Navy Theme Background ─────────────────────────────────────────
+   Import this in AdminLoginPage and DashboardPage to apply the same
+   animated background as BotPage — without the slides or quotes.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.theme-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(135deg, #0a0e27 0%, #0d1b4b 40%, #0a2a5e 70%, #0d1b4b 100%);
+}
+
+/* Animated grid */
+.theme-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: theme-grid-drift 20s linear infinite;
+}
+
+@keyframes theme-grid-drift {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(60px, 60px); }
+}
+
+/* Floating particles */
+.theme-bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.theme-bg-particle {
+  position: absolute;
+  bottom: -10px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #4facfe;
+  opacity: 0;
+  animation: theme-particle-rise linear infinite;
+}
+
+@keyframes theme-particle-rise {
+  0%   { transform: translateY(0) scale(1);   opacity: 0; }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.2; }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+
+/* Glowing orbs */
+.theme-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: #4facfe;
+  filter: blur(80px);
+  opacity: 0.12;
+  animation: theme-orb-float 8s ease-in-out infinite alternate;
+}
+
+.theme-bg-orb-1 {
+  width: 500px;
+  height: 500px;
+  top: -150px;
+  left: -150px;
+}
+
+.theme-bg-orb-2 {
+  width: 400px;
+  height: 400px;
+  bottom: -100px;
+  right: 10%;
+  animation-delay: -4s;
+  opacity: 0.08;
+}
+
+@keyframes theme-orb-float {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(40px, 30px) scale(1.1); }
+}
+
+/* Page content sits above the background */
+.theme-page-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
